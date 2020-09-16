@@ -1,8 +1,12 @@
 #include "game.h"
 
 template <typename T>
-Game<T>::Game(const std::map<Sides, std::vector<Position>>& startPosition, const std::map<Sides, std::vector<Position>>& finalPosition) :
-    actualSide(Sides::white) {
+Game<T>::Game(
+                const std::map<Sides, std::vector<Position>>& startPosition,
+                const std::map<Sides, std::vector<Position>>& finalPosition
+        ) :
+    actualSide(Sides::white),
+    actualWin(Sides::none) {
 
     // поля которые необходимо заполнить, чтобы выиграть
     for (auto& sidesPositons : finalPosition) {
@@ -34,7 +38,6 @@ Game<T>::Game(const std::map<Sides, std::vector<Position>>& startPosition, const
             }
         }
     }
-
 }
 
 template <typename T>
@@ -47,6 +50,15 @@ bool Game<T>::CheckFinal(const Sides& actualSide) {
             return false;
     }
     return true;
+}
+
+template <typename T>
+bool Game<T>::CheckFinal() {
+    if (CheckFinal(actualSide)) {
+        actualWin = actualSide;
+        return true;
+    }
+    return false;
 }
 
 template <typename T>
@@ -101,6 +113,7 @@ bool Game<T>::DoStep(const Position& from, const Position& to) {
 
     cells[to] = actualSide;
     cellFrom->second = Sides::none;
+    CheckFinal();
     actualSide++;
     
     return true;
