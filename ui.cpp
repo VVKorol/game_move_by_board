@@ -7,7 +7,6 @@
 #include <iostream>
 #include <algorithm>
 #include "game.h"
-#include <getopt.h>
 
 struct my_color
 {
@@ -20,8 +19,9 @@ struct my_color
 const float STEP = 1.f/static_cast<float>(BOARD_SIZE);
 my_color black_obj, white_obj, chose_obj;
 bool isChouse = false;
+bool isFinalGame = false;
 Position actualFromCoord;
-Game<Pawn> * testGame;
+Game<Pawn> * testGame = nullptr;
 
 Position getNumInBoard(int height, int width, int xpos, int ypos) {
     int StepInPix = height/(2*static_cast<float>(BOARD_SIZE));
@@ -36,6 +36,8 @@ static void error_callback(int error, const char* description) {
     fputs(description, stderr);
 }
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+    if (isFinalGame)
+        return;
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         double xpos, ypos;
         int width, height;
@@ -48,6 +50,8 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 
         if (isChouse) {
             if (testGame->DoStep(actualFromCoord, res)) { 
+                if(testGame->whoFin() != Sides::none)
+                    isFinalGame=true;
                 isChouse = false;
                 if (needDebug) std::cout << "UI DoStep(" << actualFromCoord <<"," << res<<std::endl;
                 auto Step = testGame->AIBestStep();
@@ -113,6 +117,31 @@ void drawObjInCell(const int row, const int col, const my_color& color) {
     glEnd();
 }
 
+void drawFinal(const my_color& color) {
+    glBegin(GL_TRIANGLES);
+    glColor3f(color.r, color.g, color.b);
+    
+    glVertex3f(0.0f, -0.5f, 0.f);
+    glVertex3f(-0.5f, 0.5f, 0.f);
+    glVertex3f(-0.5f, -0.5f, 0.f);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(color.r, color.g, color.b);
+    
+    glVertex3f(0.3f, -0.5f,  0.f);
+    glVertex3f(0.0f, 0.7f, 0.f);
+    glVertex3f(-0.3f, -0.5f, 0.f);
+    glEnd();
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(color.r, color.g, color.b);
+    
+    glVertex3f(0.0f, -0.5f, 0.f);
+    glVertex3f(0.5f, 0.5f, 0.f);
+    glVertex3f(0.5f, -0.5f, 0.f);
+    glEnd();
+}
 
 void display (GLFWwindow * window) {
     int width, height;
@@ -128,6 +157,12 @@ void display (GLFWwindow * window) {
     glOrtho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    if (isFinalGame) {
+        if (testGame != nullptr)
+            drawFinal(testGame->whoFin() == Sides::white ? white_obj: black_obj);
+        return;
+    }
 
     for (unsigned i = 0; i < BOARD_SIZE; ++i) {
         for(unsigned j = 0; j < BOARD_SIZE; ++j) {
@@ -175,7 +210,7 @@ void createBaseInfo() {
     finalPosition[Sides::white] = blackPosition;
     finalPosition[Sides::black] = whitePosition;
 
-    testGame = new Game<Pawn>(startPosition, finalPosition);
+    testGame = new Game<Pawn> (startPosition, finalPosition);
 
 
 }
