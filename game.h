@@ -11,6 +11,7 @@ template <typename Obj>
 class Game {
     Obj   actualObj;
     Sides actualSide;
+    Sides actualWin;
     std::map<Position, Sides> cells; 
     std::map<Sides, std::vector<Position>> cellsEnd;
     std::map<Sides, std::map<Position, Position>> targets;
@@ -18,8 +19,13 @@ class Game {
 
 public:
     std::map<Position, Sides>& Cells() {return cells;}
-    Game(const std::map<Sides, std::vector<Position>>& startPosition, const std::map<Sides, std::vector<Position>>& finalPosition);
+    Game(
+        const std::map<Sides, std::vector<Position>>& startPosition,
+        const std::map<Sides, std::vector<Position>>& finalPosition
+    );
     bool CheckFinal(const Sides& actualSide);
+    bool CheckFinal();
+    Sides whoFin() {return actualWin;}
     bool DoStep(const Position& from, const Position& to);
     bool ChooseObj(const Position& from);
     std::pair<Position, Position> AIBestStep();
